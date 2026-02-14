@@ -35,18 +35,6 @@ int audio_callback(void *ctx) {
 
 }
 
-void generate_drone_ifft() {
-
-    fft_complex_uint16_dma(DMAC_CHANNEL1, DMAC_CHANNEL2, 0, FFT_DIR_BACKWARD, 
-                           (uint64_t *)fft_in_data, FFT_N, (uint64_t *)fft_out_data);
-
-    for (int i = 0; i < FFT_N / 2; i++) {
-        audio_out[2 * i]     = fft_out_data[i].R1;
-        audio_out[2 * i + 1] = fft_out_data[i].R2;
-    }
-
-}
-
 void setup() {
 
     sysctl_clock_enable(SYSCTL_CLOCK_FFT);
@@ -102,7 +90,12 @@ void loop() {
 
     }
 
-    generate_drone_ifft();
+    fft_complex_uint16_dma(DMAC_CHANNEL1, DMAC_CHANNEL2, 0, FFT_DIR_BACKWARD, (uint64_t *)fft_in_data, FFT_N, (uint64_t *)fft_out_data);
+
+    for (int i = 0; i < FFT_N / 2; i++) {
+        audio_out[2 * i]     = fft_out_data[i].R1;
+        audio_out[2 * i + 1] = fft_out_data[i].R2;
+    }
 
     delay(50);
 
