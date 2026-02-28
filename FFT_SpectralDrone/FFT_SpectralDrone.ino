@@ -1,12 +1,7 @@
 // Spectral drone FFT hardware //
 
-#include <stdio.h>
-#include <timer.h>
-#include <pwm.h>
-#include <plic.h>
-#include <sysctl.h>
-#include <fpioa.h>
-#include <fft.h>
+#include "timer.h"
+#include "fft.h"
 
 #define FFT_N           512
 #define SAMPLE_RATE     44100
@@ -14,6 +9,9 @@
 #define PWM_RATE        1000000
 #define AUDIO_PIN_L     6
 #define AUDIO_PIN_R     8
+
+#define BINS    32
+#define AMPS    32767 / BINS
 
 static int16_t audio_out[FFT_N];
 volatile int sample_ptr = 0;
@@ -36,6 +34,8 @@ int audio_callback(void *ctx) {
 }
 
 void setup() {
+
+    srand(read_cycle());
 
     sysctl_clock_enable(SYSCTL_CLOCK_FFT);
     sysctl_reset(SYSCTL_RESET_FFT);
@@ -60,8 +60,6 @@ void setup() {
 }
 
 void loop() {
-
-    int bins = 80;
     
     for (int i = 0; i < FFT_N / 2; i++) {
 
@@ -79,8 +77,8 @@ void loop() {
 
     for (int j = 0; j < 3; j++) {
 
-        int target_bin = rand() % bins;
-        int16_t amp = 3000 / (1 + (target_bin / 10));
+        int target_bin = rand() % BINS;
+        int16_t amp = rand() % AMPS;
 
         if (target_bin % 2 == 0) {
             fft_in_data[target_bin / 2].R1 += amp;

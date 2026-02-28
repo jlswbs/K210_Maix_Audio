@@ -1,12 +1,7 @@
 // Spectral tibet FFT hardware //
 
-#include <stdio.h>
-#include <timer.h>
-#include <pwm.h>
-#include <plic.h>
-#include <sysctl.h>
-#include <fpioa.h>
-#include <fft.h>
+#include "timer.h"
+#include "fft.h"
 
 #define FFT_N           512
 #define SAMPLE_RATE     44100
@@ -14,6 +9,8 @@
 #define PWM_RATE        1000000
 #define AUDIO_PIN_L     6
 #define AUDIO_PIN_R     8
+
+#define BINS    128
 
 static int16_t audio_out[FFT_N];
 volatile int sample_ptr = 0;
@@ -36,6 +33,8 @@ int audio_callback(void *ctx) {
 }
 
 void setup() {
+
+    srand(read_cycle());
 
     sysctl_clock_enable(SYSCTL_CLOCK_FFT);
     sysctl_reset(SYSCTL_RESET_FFT);
@@ -60,8 +59,6 @@ void setup() {
 }
 
 void loop() {
-
-    int bins = 120;
     
     for (int i = 0; i < FFT_N / 2; i++) {
 
@@ -98,7 +95,7 @@ void loop() {
     if (rand() % 5 == 0) {
 
         for (int j = 0; j < 2; j++) {
-            int target_bin = 10 + (rand() % bins);
+            int target_bin = 10 + (rand() % BINS);
             int16_t amp = 5000 / (1 + (target_bin / 20));
 
             if (target_bin % 2 == 0) {

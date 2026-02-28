@@ -1,12 +1,7 @@
 // Spectral melody FFT hardware //
 
-#include <stdio.h>
-#include <timer.h>
-#include <pwm.h>
-#include <plic.h>
-#include <sysctl.h>
-#include <fpioa.h>
-#include <fft.h>
+#include "timer.h"
+#include "fft.h"
 
 #define FFT_N           512
 #define SAMPLE_RATE     44100
@@ -50,6 +45,8 @@ int audio_callback(void *ctx) {
 }
 
 void setup() {
+
+    srand(read_cycle());
 
     sysctl_clock_enable(SYSCTL_CLOCK_FFT);
     sysctl_reset(SYSCTL_RESET_FFT);
