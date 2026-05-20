@@ -34,7 +34,7 @@ int overflow_counter = 0;
 
 float randomf(float min, float max) { return min + (max - min) * ((float)rand() / (float)RAND_MAX); }
 
-float cubic_activation(float x) { return x * x * x; }
+float cubic_activation(float x) { return (x * 1.2f) - (0.2f * x * x * x); }
 
 float cubic_tanh_safe(float x) {
 
@@ -57,11 +57,11 @@ void neuralChaosInit() {
     }
 
     for (int j = 0; j < HIDDEN_SIZE; j++) {
-        b1[j] = randomf(-0.5f, 0.5f);
-        w2[j] = randomf(-1.0f, 1.0f);
+        b1[j] = randomf(-0.8f, 0.8f);
+        w2[j] = randomf(-1.2f, 1.2f);
     }
 
-    b2 = randomf(-0.5f, 0.5f);
+    b2 = randomf(-0.3f, 0.3f);
 
     for (int i = 0; i < BUFFER_SIZE; i++) {
         audio_buffer[i] = randomf(-0.1f, 0.1f);
@@ -73,34 +73,23 @@ void neuralChaosInit() {
 void mutate(float amount) {
 
     float chaos_mutation = amount * 1.5f;
+    float decay = 0.99f; 
 
     for (int i = 0; i < INPUT_SIZE; i++) {
         for (int j = 0; j < HIDDEN_SIZE; j++) {
-            w1[i][j] += randomf(-chaos_mutation, chaos_mutation);
-
-            if (w1[i][j] > 1.0f) w1[i][j] = 1.0f;
-            if (w1[i][j] < -1.0f) w1[i][j] = -1.0f;
+            w1[i][j] = (w1[i][j] * decay) + randomf(-chaos_mutation, chaos_mutation);
         }
     }
 
     for (int j = 0; j < HIDDEN_SIZE; j++) {
-        w2[j] += randomf(-chaos_mutation, chaos_mutation);
-
-        if (w2[j] > 1.0f) w2[j] = 1.0f;
-        if (w2[j] < -1.0f) w2[j] = -1.0f;
-
-        b1[j] += randomf(-amount, amount);
-
-        if (b1[j] > 0.5f) b1[j] = 0.5f;
-        if (b1[j] < -0.5f) b1[j] = -0.5f;
+        w2[j] = (w2[j] * decay) + randomf(-chaos_mutation, chaos_mutation);
+        b1[j] = (b1[j] * decay) + randomf(-amount, amount);
     }
 
-    b2 += randomf(-amount, amount);
-
-    if (b2 > 1.0f) b2 = 1.0f;
-    if (b2 < -1.0f) b2 = -1.0f;
+    b2 = (b2 * decay) + randomf(-amount, amount);
 
 }
+
 
 void generateChaosSeed() {
 
@@ -173,11 +162,8 @@ void processChaosBlock(float& divergence) {
 
             update += b2;
 
-            dst[i] = src[i] + update * CHAOS_UPDATE;
-
-            if (fabsf(dst[i]) > 10.0f) {
-                dst[i] = tanhf(dst[i]) * 8.0f;
-            }
+            float raw_step = src[i] + update * CHAOS_UPDATE;
+            dst[i] = tanhf(raw_step * 0.2f) * 5.0f; 
 
             if (fabsf(dst[i]) > max_val) {
                 max_val = fabsf(dst[i]);
@@ -303,12 +289,7 @@ void loop() {
 
         if (evolution_counter >= 16) {
             evolution_counter = 0;
-
-            float mutation_strength =
-                0.05f +
-                divergence * 0.3f +
-                lyapunov_estimate * 0.2f;
-
+            float mutation_strength = 0.01f + (divergence * 0.05f);
             mutate(mutation_strength);
         }
 
