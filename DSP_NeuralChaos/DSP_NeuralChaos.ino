@@ -90,27 +90,6 @@ void mutate(float amount) {
 
 }
 
-
-void generateChaosSeed() {
-
-    float sum_abs = 0.0f;
-
-    for (int i = 0; i < BUFFER_SIZE; i++) {
-        sum_abs += fabsf(audio_buffer[i]);
-    }
-
-    float avg_abs = sum_abs / BUFFER_SIZE;
-
-    if (avg_abs < 0.01f) {
-        for (int i = 0; i < BUFFER_SIZE; i++) {
-            if (randomf(0.0f, 1.0f) < 0.01f) {
-                audio_buffer[i] = randomf(-0.05f, 0.05f);
-            }
-        }
-    }
-
-}
-
 void processChaosBlock(float& divergence) {
 
     for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -280,16 +259,14 @@ void loop() {
     static int evolution_counter = 0;
 
     if (buffer_ready) {
+
         float divergence = 0.0f;
-
-        generateChaosSeed();
         processChaosBlock(divergence);
-
         evolution_counter++;
 
         if (evolution_counter >= 16) {
             evolution_counter = 0;
-            float mutation_strength = 0.01f + (divergence * 0.05f);
+            float mutation_strength = 0.01f + (divergence * 0.03f);
             mutate(mutation_strength);
         }
 
